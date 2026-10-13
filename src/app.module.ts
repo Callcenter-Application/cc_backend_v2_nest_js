@@ -3,7 +3,7 @@ import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { UserModule } from './user/user.module.js';
-import { TypeOrmModule } from '@nestjs/typeorm'; //===> Tengo que configurar esto bien.
+import { TypeOrmModule } from '@nestjs/typeorm'; 
 import { ConfigModule, ConfigService } from '@nestjs/config'; 
 import configuration from './config/configuration.js';
 
@@ -25,8 +25,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         username: config.get<string>('database.username'),
         password: config.get<string>('database.password'),
         database: config.get<string>('database.name'),
-        autoLoadEntities: true, // registers every entity added via forFeature()
-        synchronize: true, // creates/updates tables from entities (development only)
+        autoLoadEntities: true, 
+        synchronize: true, 
       }),
     }),
   ],

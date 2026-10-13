@@ -1,45 +1,44 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { User } from './entities/user.entity.js';
-import { userInfo } from 'os';
-
-const fakeDB: any[] = []
-
-const findUser = (id: number) => {
-  return fakeDB.find(user => (user.id === id) )
-}
-
-const findUserIndex = (id: number) => {
-  return fakeDB.findIndex(user => (user.id === id))
-}
 
 @Injectable()
 export class UserService {
-  
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+
   create(createUserDto: CreateUserDto) {
-    fakeDB.push(createUserDto)
-    return createUserDto;
+    const user = this.userRepository.create(createUserDto);
+    user.isActive = true;
+    return this.userRepository.save(user);
   }
 
   findAll() {
-    return fakeDB;
+    return this.userRepository.find({ where: { isActive: true } });
   }
 
-  findOne(id: number) {
-    const user = findUser(id)
+  async findOne(id: number) {
+    const user = await this.userRepository.findOneBy({ id, isActive: true });
+    if (!user) {
+      throw new NotFoundException(`User #${id} not found`);
+    }
     return user;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    const userToUpdate = findUserIndex(id)
-    fakeDB[userToUpdate] = updateUserDto
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    await this.findOne(id);
+    await this.userRepository.update(id, updateUserDto);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    const userToDelete = findUserIndex(id)
-    fakeDB.splice(userToDelete, 1)
-    return `This action removes a #${id} user`;
+  async remove(id: number) {
+    const user = await this.findOne(id);
+    await this.userRepository.update(id, { isActive: false });
+    return user;
   }
 }
