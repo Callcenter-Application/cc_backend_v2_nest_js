@@ -11,4 +11,8 @@ export default () => ({
     password: process.env.POSTGRES_PASSWORD,
     name: process.env.POSTGRES_DB,
   },
+  jwt: {
+    secret: process.env.JWT_SECRET ?? 'dev-secret-change-me',
+    expiresIn: process.env.JWT_EXPIRES_IN ?? '1h',
+  },
 });

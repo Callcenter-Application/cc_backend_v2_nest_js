@@ -16,5 +16,8 @@ COPY . .
 # Build the NestJS application
 RUN npm run build
 
-# Command to run the application
-CMD ["npm", "run", "start:dev"]
+# Make the entrypoint script executable
+RUN chmod +x entrypoint.sh
+
+# Starts the app and seeds the first Administrator user
+CMD ["./entrypoint.sh"]

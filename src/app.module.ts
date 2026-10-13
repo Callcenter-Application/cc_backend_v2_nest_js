@@ -3,8 +3,9 @@ import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { UserModule } from './user/user.module.js';
-import { TypeOrmModule } from '@nestjs/typeorm'; 
-import { ConfigModule, ConfigService } from '@nestjs/config'; 
+import { AuthModule } from './auth/auth.module.js';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
@@ -12,6 +13,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
 @Module({
   imports: [
     UserModule,
+    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration]

@@ -11,6 +11,7 @@ async function bootstrap() {
     .setDescription('This is the second version of my callcenter backend')
     .setVersion('2.0')
     .addTag('Handler')
+    .addBearerAuth()
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, documentFactory);
