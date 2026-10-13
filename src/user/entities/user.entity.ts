@@ -19,7 +19,10 @@ export class User {
     description: 'Add your Email address, one per account',
     example: 'luisreyes@email.com',
   })
-  @Column()
+  @Column({
+    unique: true,
+    default: null,
+  })
   email: string;
 
   @ApiProperty({
