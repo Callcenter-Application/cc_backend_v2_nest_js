@@ -67,6 +67,22 @@ sudo docker compose --env-file .env.supabase up --build
 sudo docker compose --env-file .env.supabase down -v
 ```
 
+## Deploy on Vercel
+
+Vercel detects NestJS with zero configuration (entrypoint `src/main.ts`) and runs the whole API as one function.
+
+1. Run the migrations and the admin seed against Supabase from your machine. They don't run on Vercel:
+   ```bash
+   npm run migration:run:supabase
+   npm run seed:admin:supabase
+   ```
+2. Set the variables listed in `.env.vercel.example` in Project → Settings → Environment Variables. Use the Supabase **Transaction** pooler (port `6543`).
+3. Deploy:
+   ```bash
+   vercel          # preview
+   vercel --prod   # production
+   ```
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.

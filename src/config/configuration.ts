@@ -15,6 +15,9 @@ export default () => ({
     // Off unless explicitly enabled, so a missing variable never lets TypeORM
     // auto-alter a real database. `.env.local` turns it on for development.
     synchronize: process.env.DB_SYNCHRONIZE === 'true',
+    // Max connections per process. Keep it low on serverless (Vercel), where
+    // every function instance opens its own pool against the Supabase pooler.
+    poolMax: parseInt(process.env.POSTGRES_POOL_MAX ?? '', 10) || 10,
   },
   jwt: {
     secret: process.env.JWT_SECRET ?? 'dev-secret-change-me',
