@@ -4,5 +4,7 @@ dist
 .git
 .gitignore
 .env
+.env.*
+!.env.*.example
 .kilo
 coverage

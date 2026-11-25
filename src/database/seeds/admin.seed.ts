@@ -5,12 +5,14 @@ const PASSWORD_SALT_ROUNDS = 10;
 
 // Mirrors roleEnum.ADMINISTRATOR (src/user/enums/roleEnum.ts). Kept as a
 // literal, rather than imported, so this script can run standalone via
-// `node --experimental-transform-types` without resolving sibling .ts files.
+// `node` (built-in TypeScript type stripping) without resolving sibling .ts
+// files.
 const ADMINISTRATOR_ROLE = '0';
 
 // When run alongside app startup (see entrypoint.sh), the "user" table may
-// not exist yet until TypeORM's `synchronize` finishes — retry the initial
-// read until the schema is ready instead of failing the container.
+// not exist yet until TypeORM's `synchronize` (or a migration) finishes —
+// retry the initial read until the schema is ready instead of failing the
+// container.
 const SCHEMA_READY_MAX_ATTEMPTS = 15;
 const SCHEMA_READY_RETRY_DELAY_MS = 2000;
 
@@ -23,6 +25,11 @@ async function run() {
     user: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB,
+    // Mirrors buildDataSourceOptions (src/database/database-options.ts).
+    ssl:
+      process.env.POSTGRES_SSL === 'true'
+        ? { rejectUnauthorized: false }
+        : false,
   });
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@callbook.com';

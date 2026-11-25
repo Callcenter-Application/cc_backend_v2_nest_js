@@ -12,6 +12,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "start:dev:supabase": "ENV_FILE=.env.supabase nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "oxlint --type-aware src/ test/",
@@ -20,8 +21,16 @@
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
-    "seed:admin": "node --env-file=.env --experimental-transform-types src/database/seeds/admin.seed.ts",
-    "seed:admin:docker": "node dist/database/seeds/admin.seed.js"
+    "seed:admin": "node --env-file=${ENV_FILE:-.env.local} src/database/seeds/admin.seed.ts",
+    "seed:admin:supabase": "ENV_FILE=.env.supabase npm run seed:admin",
+    "seed:admin:docker": "node dist/database/seeds/admin.seed.js",
+    "typeorm": "node --env-file=${ENV_FILE:-.env.local} ./node_modules/typeorm/cli.js -d dist/database/data-source.js",
+    "migration:generate": "nest build && npm run typeorm -- migration:generate",
+    "migration:run": "nest build && npm run typeorm -- migration:run",
+    "migration:run:supabase": "ENV_FILE=.env.supabase npm run migration:run",
+    "migration:revert": "nest build && npm run typeorm -- migration:revert",
+    "migration:revert:supabase": "ENV_FILE=.env.supabase npm run migration:revert",
+    "migration:run:docker": "node ./node_modules/typeorm/cli.js -d dist/database/data-source.js migration:run"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

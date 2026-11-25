@@ -10,6 +10,11 @@ export default () => ({
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     name: process.env.POSTGRES_DB,
+    // Supabase requires SSL; the local Docker Postgres does not support it.
+    ssl: process.env.POSTGRES_SSL === 'true',
+    // Off unless explicitly enabled, so a missing variable never lets TypeORM
+    // auto-alter a real database. `.env.local` turns it on for development.
+    synchronize: process.env.DB_SYNCHRONIZE === 'true',
   },
   jwt: {
     secret: process.env.JWT_SECRET ?? 'dev-secret-change-me',

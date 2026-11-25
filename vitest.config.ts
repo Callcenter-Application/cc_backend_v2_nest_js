@@ -21,6 +21,10 @@ export default defineConfig({
         'src/main.ts',
         'src/**/*.module.ts',
         'src/database/seeds/**',
+        // TypeORM CLI wiring and generated migrations, exercised by
+        // `npm run migration:run`, not unit tests.
+        'src/database/data-source.ts',
+        'src/database/migrations/**',
       ],
       // `npm run test:cov` fails if coverage drops below these.
       // Branches can't reach 100%: the test transformer emits

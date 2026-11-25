@@ -1,21 +1,27 @@
+# Pick the database with --env-file (also used for ${...} interpolation below):
+#   docker compose --env-file .env.local --profile local up --build   # app + local Postgres
+#   docker compose --env-file .env.supabase up --build                # app only, Supabase DB
 services:
   app:
     build: ./
     env_file:
-      - .env
+      - ${APP_ENV_FILE:-.env.local}
     container_name: ${CONTAINER_NAME}
-    ports: 
+    ports:
       - ${PORT}:${PORT}
     depends_on:
       db:
         condition: service_healthy
+        # Skipped when the `local` profile is off (Supabase mode).
+        required: false
     restart: always
 
   db:
     image: postgres:15.3-alpine
+    profiles: ["local"]
     env_file:
-      - .env
-    container_name: ${POSTGRES_NAME}
+      - ${APP_ENV_FILE:-.env.local}
+    container_name: ${POSTGRES_NAME:-callbook_db}
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     environment:

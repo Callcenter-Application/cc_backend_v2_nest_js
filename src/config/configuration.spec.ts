@@ -7,6 +7,8 @@ const KEYS = [
   'POSTGRES_USER',
   'POSTGRES_PASSWORD',
   'POSTGRES_DB',
+  'POSTGRES_SSL',
+  'DB_SYNCHRONIZE',
   'JWT_SECRET',
   'JWT_EXPIRES_IN',
 ];
@@ -31,6 +33,8 @@ describe('configuration', () => {
         username: undefined,
         password: undefined,
         name: undefined,
+        ssl: false,
+        synchronize: false,
       },
       jwt: { secret: 'dev-secret-change-me', expiresIn: '1h' },
     });
@@ -44,6 +48,8 @@ describe('configuration', () => {
       POSTGRES_USER: 'u',
       POSTGRES_PASSWORD: 'p',
       POSTGRES_DB: 'callbook',
+      POSTGRES_SSL: 'true',
+      DB_SYNCHRONIZE: 'true',
       JWT_SECRET: 's',
       JWT_EXPIRES_IN: '2h',
     });
@@ -56,9 +62,20 @@ describe('configuration', () => {
         username: 'u',
         password: 'p',
         name: 'callbook',
+        ssl: true,
+        synchronize: true,
       },
       jwt: { secret: 's', expiresIn: '2h' },
     });
+  });
+
+  it('only enables ssl and synchronize with the exact value "true"', () => {
+    process.env.POSTGRES_SSL = '1';
+    process.env.DB_SYNCHRONIZE = 'yes';
+
+    const { database } = configuration();
+    expect(database.ssl).toBe(false);
+    expect(database.synchronize).toBe(false);
   });
 
   it('falls back to default ports when the values are not numbers', () => {

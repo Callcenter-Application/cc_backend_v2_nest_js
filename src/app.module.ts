@@ -7,6 +7,11 @@ import { AuthModule } from './auth/auth.module.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration.js';
+import {
+  buildDataSourceOptions,
+  logDatabaseTarget,
+  type DatabaseConfig,
+} from './database/database-options.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -16,20 +21,19 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [configuration]
+      load: [configuration],
+      // Pick the database by env file: .env.local (default) or .env.supabase
+      // (`ENV_FILE=.env.supabase`). A missing file is skipped, e.g. in Docker,
+      // where Compose injects the variables directly.
+      envFilePath: process.env.ENV_FILE ?? '.env.local',
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('database.host'),
-        port: config.get<number>('database.port'),
-        username: config.get<string>('database.username'),
-        password: config.get<string>('database.password'),
-        database: config.get<string>('database.name'),
-        autoLoadEntities: true, 
-        synchronize: true, 
-      }),
+      useFactory: (config: ConfigService) => {
+        const db = config.getOrThrow<DatabaseConfig>('database');
+        logDatabaseTarget(db);
+        return { ...buildDataSourceOptions(db), autoLoadEntities: true };
+      },
     }),
   ],
   controllers: [AppController],
