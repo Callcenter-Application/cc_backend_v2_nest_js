@@ -64,7 +64,7 @@ describe('UserController', () => {
     const reflector = new Reflector();
     const proto = UserController.prototype;
 
-    it.each(['create', 'remove'] as const)(
+    it.each(['create', 'findAll', 'findOne', 'update', 'remove'] as const)(
       '%s requires JWT + ADMINISTRATOR role',
       (method) => {
         expect(reflector.get(GUARDS_METADATA, proto[method])).toEqual([
@@ -74,13 +74,6 @@ describe('UserController', () => {
         expect(reflector.get(ROLES_KEY, proto[method])).toEqual([
           roleEnum.ADMINISTRATOR,
         ]);
-      },
-    );
-
-    it.each(['findAll', 'findOne', 'update'] as const)(
-      '%s is currently public (no guards)',
-      (method) => {
-        expect(reflector.get(GUARDS_METADATA, proto[method])).toBeUndefined();
       },
     );
   });
