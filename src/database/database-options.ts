@@ -31,6 +31,7 @@ export function buildDataSourceOptions(
     // Supabase's certificate is signed by its own CA, not a public one.
     ssl: db.ssl ? { rejectUnauthorized: false } : false,
     synchronize: db.synchronize,
+    extra: { max: db.poolMax },
   };
 }
 

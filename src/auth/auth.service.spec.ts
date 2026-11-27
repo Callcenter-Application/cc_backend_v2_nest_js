@@ -95,10 +95,8 @@ describe('AuthService', () => {
     expect(row.tokenHash).not.toContain('some.jwt.token');
     expect(row.expiresAt).toEqual(new Date(exp * 1000));
     expect(conflictPaths).toEqual(['tokenHash']);
-    // expired rows are purged
-    expect(revokedTokenRepository.delete).toHaveBeenCalledWith({
-      expiresAt: expect.objectContaining({ _type: 'lessThan' }),
-    });
+    // purging expired rows is a scheduled DB job, not part of the request
+    expect(revokedTokenRepository.delete).not.toHaveBeenCalled();
   });
 
   it('logout rejects a token without exp', async () => {

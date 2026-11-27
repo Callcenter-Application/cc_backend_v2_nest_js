@@ -19,5 +19,5 @@ RUN npm run build
 # Make the entrypoint script executable
 RUN chmod +x entrypoint.sh
 
-# Starts the app and seeds the first Administrator user
+# Applies pending migrations, then starts the app
 CMD ["./entrypoint.sh"]

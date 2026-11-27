@@ -13,6 +13,7 @@ const local: DatabaseConfig = {
   name: 'callbook_db',
   ssl: false,
   synchronize: true,
+  poolMax: 10,
 };
 
 const supabase: DatabaseConfig = {
@@ -23,6 +24,7 @@ const supabase: DatabaseConfig = {
   name: 'postgres',
   ssl: true,
   synchronize: false,
+  poolMax: 2,
 };
 
 describe('isSupabaseHost', () => {
@@ -48,6 +50,7 @@ describe('buildDataSourceOptions', () => {
       database: 'callbook_db',
       ssl: false,
       synchronize: true,
+      extra: { max: 10 },
     });
   });
 
@@ -56,6 +59,7 @@ describe('buildDataSourceOptions', () => {
       host: supabase.host,
       ssl: { rejectUnauthorized: false },
       synchronize: false,
+      extra: { max: 2 },
     });
   });
 

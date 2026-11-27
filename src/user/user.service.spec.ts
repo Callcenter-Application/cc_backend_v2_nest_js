@@ -9,19 +9,28 @@ import { roleEnum } from './enums/roleEnum.js';
 
 describe('UserService', () => {
   let service: UserService;
+
+  // Chainable stand-in for the UPDATE ... RETURNING query builder.
+  const qb = {
+    update: vi.fn(),
+    set: vi.fn(),
+    where: vi.fn(),
+    returning: vi.fn(),
+    execute: vi.fn(),
+  };
   const repo = {
     create: vi.fn(),
     save: vi.fn(),
     find: vi.fn(),
     findOneBy: vi.fn(),
-    update: vi.fn(),
+    createQueryBuilder: vi.fn(),
   };
 
   const existingUser = {
     id: 1,
     firstName: 'Luis',
     lastName: 'Reyes',
-    email: 'luis@email.com',
+    email: 'luisreyes@email.com',
     password: 'stored-hash',
     role: roleEnum.OPERATOR,
     isActive: true,
@@ -29,6 +38,12 @@ describe('UserService', () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
+    repo.createQueryBuilder.mockReturnValue(qb);
+    qb.update.mockReturnValue(qb);
+    qb.set.mockReturnValue(qb);
+    qb.where.mockReturnValue(qb);
+    qb.returning.mockReturnValue(qb);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
@@ -40,7 +55,7 @@ describe('UserService', () => {
   });
 
   describe('create', () => {
-    it('hashes the password, forces isActive and saves', async () => {
+    it('hashes the password, forces isActive and saves without a transaction', async () => {
       const dto = {
         firstName: 'Ana',
         lastName: 'Gomez',
@@ -49,18 +64,19 @@ describe('UserService', () => {
         role: roleEnum.SUPERVISOR,
         isActive: false,
       } as CreateUserDto;
-      repo.create.mockImplementation((d: CreateUserDto) => Object.assign({}, d));
+      repo.create.mockImplementation((d: Partial<User>) => Object.assign({}, d));
       repo.save.mockImplementation((u: User) =>
         Promise.resolve(Object.assign(u, { id: 7 })),
       );
 
       const result = await service.create(dto);
 
-      expect(repo.create).toHaveBeenCalledWith(dto);
-      const saved = repo.save.mock.calls[0][0] as User;
+      const [saved, options] = repo.save.mock.calls[0] as [User, object];
       expect(saved.isActive).toBe(true);
+      expect(saved.email).toBe('ana@email.com');
       expect(saved.password).not.toBe('Plain123@');
       await expect(compare('Plain123@', saved.password)).resolves.toBe(true);
+      expect(options).toEqual({ transaction: false });
       expect(result.id).toBe(7);
     });
   });
@@ -92,53 +108,53 @@ describe('UserService', () => {
   });
 
   describe('update', () => {
-    it('updates fields without touching the password when none is sent', async () => {
+    it('updates an active user in one query and returns the updated row', async () => {
       const updated = { ...existingUser, firstName: 'Luisito' };
-      repo.findOneBy
-        .mockResolvedValueOnce(existingUser)
-        .mockResolvedValueOnce(updated);
+      qb.execute.mockResolvedValue({ raw: [updated] });
 
-      const result = await service.update(1, { firstName: 'Luisito' });
-
-      expect(repo.update).toHaveBeenCalledWith(1, { firstName: 'Luisito' });
-      expect(result).toBe(updated);
+      await expect(service.update(1, { firstName: 'Luisito' })).resolves.toBe(
+        updated,
+      );
+      expect(qb.set).toHaveBeenCalledWith({ firstName: 'Luisito' });
+      expect(qb.where).toHaveBeenCalledWith({ id: 1, isActive: true });
+      expect(qb.returning).toHaveBeenCalledWith('*');
+      expect(repo.findOneBy).not.toHaveBeenCalled();
     });
 
     it('hashes a new password before saving it', async () => {
-      repo.findOneBy.mockResolvedValue(existingUser);
+      qb.execute.mockResolvedValue({ raw: [existingUser] });
 
       await service.update(1, { password: 'NewPass123@', lastName: 'R' });
 
-      const [id, changes] = repo.update.mock.calls[0];
-      expect(id).toBe(1);
+      const [changes] = qb.set.mock.calls[0];
       expect(changes.lastName).toBe('R');
       expect(changes.password).not.toBe('NewPass123@');
       await expect(compare('NewPass123@', changes.password)).resolves.toBe(true);
     });
 
-    it('throws NotFoundException and does not update a missing user', async () => {
-      repo.findOneBy.mockResolvedValue(null);
+    it('throws NotFoundException when no active user matches', async () => {
+      qb.execute.mockResolvedValue({ raw: [] });
 
-      await expect(service.update(99, { firstName: 'X' })).rejects.toBeInstanceOf(
-        NotFoundException,
+      await expect(service.update(99, { firstName: 'X' })).rejects.toThrow(
+        new NotFoundException('User #99 not found'),
       );
-      expect(repo.update).not.toHaveBeenCalled();
     });
   });
 
   describe('remove', () => {
-    it('soft-deletes by setting isActive to false', async () => {
-      repo.findOneBy.mockResolvedValue(existingUser);
+    it('soft-deletes by setting isActive to false and returns the row', async () => {
+      const removed = { ...existingUser, isActive: false };
+      qb.execute.mockResolvedValue({ raw: [removed] });
 
-      await expect(service.remove(1)).resolves.toBe(existingUser);
-      expect(repo.update).toHaveBeenCalledWith(1, { isActive: false });
+      await expect(service.remove(1)).resolves.toBe(removed);
+      expect(qb.set).toHaveBeenCalledWith({ isActive: false });
+      expect(qb.where).toHaveBeenCalledWith({ id: 1, isActive: true });
     });
 
-    it('throws NotFoundException for a missing user', async () => {
-      repo.findOneBy.mockResolvedValue(null);
+    it('throws NotFoundException for a missing or already removed user', async () => {
+      qb.execute.mockResolvedValue({ raw: [] });
 
       await expect(service.remove(99)).rejects.toBeInstanceOf(NotFoundException);
-      expect(repo.update).not.toHaveBeenCalled();
     });
   });
 });

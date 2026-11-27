@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule, ObserveInstrument } from './app.module.js';
+import { swaggerUiOptions } from './swagger/swagger-ui-options.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -14,7 +15,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, documentFactory);
+  SwaggerModule.setup('docs', app, documentFactory, swaggerUiOptions());
   const port = process.env.PORT ?? 3000
   await app.listen(port);
   console.log(`API is running in http://localhost:${port}`);

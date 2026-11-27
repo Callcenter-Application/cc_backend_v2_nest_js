@@ -17,7 +17,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'Enter your email address, one per account',
-    example: 'luisreyes@email.com',
+    example: 'luisreyes@gmail.com',
   })
   email: string;
 
@@ -30,7 +30,7 @@ export class CreateUserDto {
   @ApiProperty({
     description: 'Select the User Role',
     enum: roleEnum,
-    default: roleEnum.ADMINISTRATOR,
+    default: roleEnum.OPERATOR,
   })
   @Index()
   role: roleEnum;

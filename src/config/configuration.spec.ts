@@ -9,6 +9,7 @@ const KEYS = [
   'POSTGRES_DB',
   'POSTGRES_SSL',
   'DB_SYNCHRONIZE',
+  'POSTGRES_POOL_MAX',
   'JWT_SECRET',
   'JWT_EXPIRES_IN',
 ];
@@ -35,6 +36,7 @@ describe('configuration', () => {
         name: undefined,
         ssl: false,
         synchronize: false,
+        poolMax: 10,
       },
       jwt: { secret: 'dev-secret-change-me', expiresIn: '1h' },
     });
@@ -50,6 +52,7 @@ describe('configuration', () => {
       POSTGRES_DB: 'callbook',
       POSTGRES_SSL: 'true',
       DB_SYNCHRONIZE: 'true',
+      POSTGRES_POOL_MAX: '2',
       JWT_SECRET: 's',
       JWT_EXPIRES_IN: '2h',
     });
@@ -64,6 +67,7 @@ describe('configuration', () => {
         name: 'callbook',
         ssl: true,
         synchronize: true,
+        poolMax: 2,
       },
       jwt: { secret: 's', expiresIn: '2h' },
     });
@@ -78,12 +82,14 @@ describe('configuration', () => {
     expect(database.synchronize).toBe(false);
   });
 
-  it('falls back to default ports when the values are not numbers', () => {
+  it('falls back to default ports and pool size when the values are not numbers', () => {
     process.env.PORT = 'abc';
     process.env.POSTGRES_PORT = '';
+    process.env.POSTGRES_POOL_MAX = 'x';
 
     const config = configuration();
     expect(config.port).toBe(3000);
     expect(config.database.port).toBe(5432);
+    expect(config.database.poolMax).toBe(10);
   });
 });
