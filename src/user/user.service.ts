@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity.js';
 import { hash } from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
@@ -19,7 +20,8 @@ export class UserService {
     const user = this.userRepository.create(createUserDto);
     user.isActive = true;
     user.password = await hash(createUserDto.password, PASSWORD_SALT_ROUNDS);
-    return this.userRepository.save(user);
+    // A single INSERT ... RETURNING: no BEGIN/COMMIT round trips around it.
+    return this.userRepository.save(user, { transaction: false });
   }
 
   findAll() {
@@ -35,18 +37,38 @@ export class UserService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    await this.findOne(id);
     const { password, ...rest } = updateUserDto;
     const changes = password
       ? { ...rest, password: await hash(password, PASSWORD_SALT_ROUNDS) }
       : rest;
-    await this.userRepository.update(id, changes);
-    return this.findOne(id);
+    return this.updateActiveUser(id, changes);
   }
 
-  async remove(id: number) {
-    const user = await this.findOne(id);
-    await this.userRepository.update(id, { isActive: false });
+  remove(id: number) {
+    return this.updateActiveUser(id, { isActive: false });
+  }
+
+  /**
+   * Updates an active user and returns the updated row in one round trip
+   * (UPDATE ... WHERE id AND isActive RETURNING *). No row means the user
+   * doesn't exist or was soft-deleted.
+   */
+  private async updateActiveUser(
+    id: number,
+    changes: QueryDeepPartialEntity<User>,
+  ): Promise<User> {
+    const result = await this.userRepository
+      .createQueryBuilder()
+      .update()
+      .set(changes)
+      .where({ id, isActive: true })
+      .returning('*')
+      .execute();
+
+    const [user] = result.raw as User[];
+    if (!user) {
+      throw new NotFoundException(`User #${id} not found`);
+    }
     return user;
   }
 }

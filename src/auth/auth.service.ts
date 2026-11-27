@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcryptjs';
 import { createHash } from 'node:crypto';
@@ -50,10 +50,8 @@ export class AuthService {
       { tokenHash: hashToken(token), expiresAt: new Date(payload.exp * 1000) },
       ['tokenHash'],
     );
-    // Housekeeping: tokens past their expiry are rejected by passport-jwt anyway.
-    await this.revokedTokenRepository.delete({
-      expiresAt: LessThan(new Date()),
-    });
+    // Expired rows are purged outside the request path (scheduled job in the
+    // DB); passport-jwt rejects expired tokens anyway.
 
     return { message: 'Logged out successfully' };
   }

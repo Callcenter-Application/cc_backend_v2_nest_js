@@ -1,5 +1,5 @@
 export enum roleEnum {
-    ADMINISTRATOR,
-    SUPERVISOR,
-    OPERATOR,   
+    ADMINISTRATOR = "ADMINISTRATOR",
+    SUPERVISOR = "SUPERVISOR",
+    OPERATOR = "OPERATOR",   
 }

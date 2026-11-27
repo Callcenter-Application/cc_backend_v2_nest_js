@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { createObserveModule } from '@nestjs/observe';
+import { ResponseInterceptor } from './common/response.interceptor.js';
 import { UserModule } from './user/user.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -33,6 +35,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         return { ...buildDataSourceOptions(db), autoLoadEntities: true };
       },
     }),
-  ]
+  ],
+  // Global: wraps every successful response in the { success, statusCode, data, timestamp } envelope.
+  providers: [{ provide: APP_INTERCEPTOR, useClass: ResponseInterceptor }],
 })
 export class AppModule {}

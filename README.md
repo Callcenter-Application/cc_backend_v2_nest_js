@@ -71,10 +71,9 @@ sudo docker compose --env-file .env.supabase down -v
 
 Vercel detects NestJS with zero configuration (entrypoint `src/main.ts`) and runs the whole API as one function.
 
-1. Run the migrations and the admin seed against Supabase from your machine. They don't run on Vercel:
+1. Run the migrations against Supabase from your machine. They don't run on Vercel:
    ```bash
    npm run migration:run:supabase
-   npm run seed:admin:supabase
    ```
 2. Set the variables listed in `.env.vercel.example` in Project → Settings → Environment Variables. Use the Supabase **Transaction** pooler (port `6543`).
 3. Deploy:

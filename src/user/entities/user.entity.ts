@@ -17,7 +17,7 @@ export class User {
 
   @ApiProperty({
     description: 'Add your Email address, one per account',
-    example: 'luisreyes@email.com',
+    example: 'luisreyes@gmail.com',
   })
   @Column({
     unique: true,

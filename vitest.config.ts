@@ -16,11 +16,9 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       exclude: [
         'src/**/*.spec.ts',
-        // Bootstrap/wiring and the standalone seed script are covered by e2e,
-        // not unit tests.
+        // Bootstrap/wiring is covered by e2e, not unit tests.
         'src/main.ts',
         'src/**/*.module.ts',
-        'src/database/seeds/**',
         // TypeORM CLI wiring and generated migrations, exercised by
         // `npm run migration:run`, not unit tests.
         'src/database/data-source.ts',
